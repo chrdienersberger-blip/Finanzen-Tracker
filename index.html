@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Der Browser blockiert damit jede Verbindung zu fremden Servern: Daten können die Seite technisch nicht verlassen. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; manifest-src 'self'; connect-src 'self'; worker-src 'self'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0f766e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Finanzen">
+<title>Finanztracker</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Finanztracker</h1>
+  <div class="month" id="monthNav">
+    <button type="button" id="prevMonth" aria-label="Vorheriger Monat">‹</button>
+    <span id="monthLabel"></span>
+    <button type="button" id="nextMonth" aria-label="Nächster Monat">›</button>
+  </div>
+</header>
+
+<main>
+  <section id="view-overview">
+    <div class="tiles">
+      <div class="tile"><span>Ausgaben</span><strong id="sumOut"></strong></div>
+      <div class="tile"><span>Einnahmen</span><strong id="sumIn"></strong></div>
+      <div class="tile"><span>Saldo</span><strong id="sumBal"></strong></div>
+    </div>
+    <h2>Ausgaben nach Kategorie</h2>
+    <div id="catList" class="card"></div>
+    <h2>Ausgaben der letzten 6 Monate</h2>
+    <div id="trend" class="card trend"></div>
+  </section>
+
+  <section id="view-list" hidden>
+    <input type="search" id="search" placeholder="Suchen (alle Monate) …" aria-label="Buchungen durchsuchen">
+    <div id="txList"></div>
+  </section>
+
+  <section id="view-settings" hidden>
+    <h2>Apple Pay automatisch erfassen</h2>
+    <div class="card prose">
+      <p>Auf dem iPhone kann die Kurzbefehle-App nach jeder Apple-Pay-Zahlung diese Seite mit Betrag und Händler öffnen – die Buchung wird dann sofort gespeichert.</p>
+      <ol>
+        <li>Kurzbefehle → <b>Automation</b> → <b>Neu</b> → <b>Transaktion</b> (ab iOS 17), Karte wählen, „Sofort ausführen“.</li>
+        <li>Aktion <b>URL-codieren</b> für den Händler der Kurzbefehlseingabe hinzufügen.</li>
+        <li>Aktion <b>URL</b> mit dieser Adresse – die Platzhalter durch die Variablen <i>Betrag</i> und den codierten <i>Händler</i> ersetzen:</li>
+      </ol>
+      <code id="quickUrl"></code>
+      <button type="button" id="copyUrl" class="secondary">Adresse kopieren</button>
+      <ol start="4"><li>Aktion <b>URLs öffnen</b> anhängen. Fertig.</li></ol>
+      <p class="hint">Wichtig: Die Automation öffnet Safari. Nutze die App dann auch in Safari (als Lesezeichen), nicht als Home-Bildschirm-App – beide haben auf dem iPhone getrennte Datenspeicher.</p>
+    </div>
+
+    <h2>Monatsbudgets</h2>
+    <div id="budgets" class="card"></div>
+
+    <h2>Daten</h2>
+    <div class="card prose">
+      <p>Alle Daten liegen ausschließlich in diesem Browser auf diesem Gerät. Es gibt keinen Server und kein Konto. Sichere deshalb regelmäßig ein Backup.</p>
+      <p class="hint" id="backupInfo"></p>
+      <div class="buttons">
+        <button type="button" id="exportJson">Backup speichern</button>
+        <button type="button" id="importJsonBtn" class="secondary">Backup einspielen</button>
+        <button type="button" id="importCsvBtn" class="secondary">Bank-CSV importieren</button>
+        <button type="button" id="exportCsv" class="secondary">Als CSV exportieren</button>
+        <button type="button" id="wipe" class="danger">Alle Daten löschen</button>
+      </div>
+      <input type="file" id="importJson" accept=".json,application/json" hidden>
+      <input type="file" id="importCsv" accept=".csv,text/csv,text/plain" hidden>
+    </div>
+  </section>
+</main>
+
+<button type="button" id="fab" aria-label="Buchung hinzufügen">+</button>
+
+<nav>
+  <button type="button" data-view="overview" class="active">Übersicht</button>
+  <button type="button" data-view="list">Buchungen</button>
+  <button type="button" data-view="settings">Einstellungen</button>
+</nav>
+
+<dialog id="dlg">
+  <form id="txForm" method="dialog">
+    <h2 id="dlgTitle">Neue Buchung</h2>
+    <div class="seg">
+      <label><input type="radio" name="type" value="out" checked><span>Ausgabe</span></label>
+      <label><input type="radio" name="type" value="in"><span>Einnahme</span></label>
+    </div>
+    <label>Betrag (€)<input name="amount" inputmode="decimal" autocomplete="off" required placeholder="0,00"></label>
+    <label>Händler / Notiz<input name="note" autocomplete="off" maxlength="120"></label>
+    <label>Kategorie<select name="cat"></select></label>
+    <label>Datum<input name="date" type="date" required></label>
+    <div class="buttons">
+      <button type="button" id="dlgDelete" class="danger" hidden>Löschen</button>
+      <span class="spacer"></span>
+      <button type="button" id="dlgCancel" class="secondary">Abbrechen</button>
+      <button type="submit">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" role="status" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>
