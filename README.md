@@ -30,3 +30,7 @@ Danach `http://localhost:8000` öffnen. Für die Nutzung auf dem iPhone muss die
 ## Schnellerfassung per Adresse
 
 `…/?betrag=12,34&haendler=REWE` legt sofort eine Ausgabe für heute an. Ein negativer Betrag wird als Einnahme gebucht.
+
+## Variante für die Claude-App
+
+`claude-app.html` ist dieselbe App als Claude-Artifact. Sie braucht kein Hosting und speichert die Buchungen im Claude-Konto statt im Browser. Die Schnellerfassung per Adresse und der Offline-Betrieb gibt es dort nicht.
