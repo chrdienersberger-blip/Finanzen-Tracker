@@ -75,7 +75,8 @@ input, select { font: inherit; color: var(--text); background: var(--bg); border
 .tx .mid small { color: var(--muted); }
 .tx .amt { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
 
-.prose p { margin: 0 0 10px; }
+.prose p, .prose ol { margin: 0 0 10px; } .prose ol { padding-left: 20px; } .prose li + li { margin-top: 4px; }
+.prose code { background: var(--bg); border-radius: 6px; padding: 1px 6px; font-size: 14px; }
 .hint { color: var(--muted); font-size: 14px; }
 .buttons { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .spacer { flex: 1; }
@@ -139,11 +140,20 @@ dialog p { margin: 0 0 16px; }
     <h2>Monatsbudgets</h2>
     <div id="budgets" class="card"></div>
 
-    <h2>Bankumsätze übernehmen</h2>
+    <h2>Zahlungen übernehmen</h2>
     <div class="card prose">
-      <p>Lade in deiner Banking-App oder im Online-Banking die Umsätze als CSV-Datei herunter und importiere sie hier. Darin stehen auch alle Apple-Pay-Zahlungen. Bereits vorhandene Buchungen werden übersprungen.</p>
-      <div class="buttons"><button type="button" id="importCsvBtn">Bank-CSV importieren</button></div>
-      <input type="file" id="importCsv" accept=".csv,text/csv,text/plain" hidden>
+      <p>Hier liest du Zahlungen aus einer Datei ein, statt sie einzutippen. Bereits vorhandene Buchungen werden übersprungen, du kannst dieselbe Datei also immer wieder wählen.</p>
+      <div class="buttons"><button type="button" id="importCsvBtn">Datei importieren</button></div>
+      <p></p>
+      <p><b>Apple Pay:</b> Das iPhone kann jede Zahlung selbst in eine Datei schreiben. Einmal einrichten in der App „Kurzbefehle“:</p>
+      <ol>
+        <li>Automation → Neu → <b>Transaktion</b> (ab iOS 17), deine Karten wählen, „Sofort ausführen“.</li>
+        <li>Aktion <b>Text</b> mit genau dieser Zeile, die drei Teile als Variablen einfügen: <code>Aktuelles Datum;Betrag;Händler</code> (beim Datum das Format „Kurz“ ohne Uhrzeit wählen).</li>
+        <li>Aktion <b>An Textdatei anhängen</b>, Dateiname <code>Ausgaben.txt</code>.</li>
+      </ol>
+      <p>Danach liegt in „Dateien“ unter iCloud Drive → Kurzbefehle die Datei Ausgaben.txt, die du hier importierst.</p>
+      <p><b>PayPal und Bank:</b> Im PayPal-Konto unter „Aktivitäten“ oder im Online-Banking die Umsätze als CSV herunterladen und hier importieren.</p>
+      <input type="file" id="importCsv" accept=".csv,.txt,text/csv,text/plain" hidden>
     </div>
 
     <h2>Daten</h2>
@@ -599,7 +609,7 @@ function parseDate(s) {
   s = String(s || '').trim();
   let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m) return `${m[1]}-${m[2]}-${m[3]}`;
-  m = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{2}|\d{4})$/);
+  m = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4}|\d{2})(?:\D.*)?$/);
   if (!m) return null;
   const y = m[3].length === 2 ? '20' + m[3] : m[3];
   if (+m[2] < 1 || +m[2] > 12 || +m[1] < 1 || +m[1] > 31) return null;
@@ -612,7 +622,18 @@ function csvToTx(text) {
   const isDate = (c) => /buchungstag|buchungsdatum|datum|date|valuta|wertstellung/i.test(c);
   const isAmount = (c) => /betrag|umsatz|amount/i.test(c) && !/währung|waehrung|currency/i.test(c);
   const hi = rows.findIndex((r) => r.some(isDate) && r.some(isAmount));
-  if (hi < 0) return null;
+  if (hi < 0) {
+    // Ohne Kopfzeile: Mitschrift der Kurzbefehle-Automation, je Zeile "Datum;Betrag;Händler". Beträge sind dort Ausgaben.
+    const log = [];
+    for (const r of rows) {
+      const date = parseDate(r[0]); const cents = parseAmount(r[1]);
+      if (!date || !cents) continue;
+      const note = (r[2] || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+      const type = cents > 0 ? 'out' : 'in';
+      log.push({ id: uid(), src: 'csv', type, amount: Math.abs(cents), cat: guessCat(note, type), note, date });
+    }
+    return log.length ? log : null;
+  }
   const head = rows[hi].map((c) => c.trim());
   const pick = (...res) => { for (const re of res) { const i = head.findIndex((c) => re.test(c)); if (i >= 0) return i; } return -1; };
   const cDate = pick(/buchungstag|buchungsdatum/i, /datum|date/i, /valuta|wertstellung/i);
