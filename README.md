@@ -34,3 +34,13 @@ Danach `http://localhost:8000` öffnen. Für die Nutzung auf dem iPhone muss die
 ## Variante für die Claude-App
 
 `claude-app.html` ist dieselbe App als Claude-Artifact. Sie braucht kein Hosting und speichert die Buchungen im Claude-Konto statt im Browser. Die Schnellerfassung per Adresse und der Offline-Betrieb gibt es dort nicht.
+
+## Wichtel-Rap (Wichtelautomat)
+
+Im Ordner `wichteln/` liegt ein Wichtelautomat. Über GitHub Pages ist er unter `…/wichteln/` erreichbar.
+
+1. Teilnehmer, Budget, Datum und optional Ausnahmen eintragen (z. B. Paare, die sich nicht ziehen sollen) und „Auslosen“ drücken.
+2. Jeder bekommt einen eigenen geheimen Link („Senden“ öffnet das Teilen-Menü bzw. WhatsApp).
+3. Wer seinen Link öffnet, hört einen Beat und liest eine Rap-Story in vier Strophen. Am Ende wird mit Trommelwirbel und Konfetti verraten, wen man beschenkt.
+
+Der Organisator sieht die Zuordnung nicht und kann selbst mitmachen. Die Zuordnung steckt verschleiert im `#`-Teil des Links, also gibt es keinen Server und keine Datenbank. Der Link ist allerdings nur verschleiert, nicht sicher verschlüsselt. Für Wichteln unter Freunden reicht das.
